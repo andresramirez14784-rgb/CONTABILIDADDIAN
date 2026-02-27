@@ -1775,9 +1775,12 @@ if t:
     import io     as _io_bk
     import plotly.express as _px_bk
 
+    from database import save_bank_report, get_bank_reports, delete_bank_report
+    
     section_header("🏦 Extractos Bancarios — Dashboard por Cuenta")
 
-    _bk_loaded = st.session_state.get("bank_data", {})
+    _current_comp_id = get_current_company().get("id")
+    _bk_loaded = get_bank_reports(_current_comp_id) if _current_comp_id else {}
 
     if _bk_loaded:
         # ── Agrupar por banco + cuenta ────────────────────────────────────
@@ -1838,12 +1841,13 @@ if t:
                     st.markdown("<div style='padding-top:14px;'></div>", unsafe_allow_html=True)
                     if st.button("🗑 Limpiar reporte", key=f"bk_del_{aid}", use_container_width=True):
                         for fn in filenames:
-                            st.session_state["bank_data"].pop(fn, None)
+                            delete_bank_report(_current_comp_id, fn)
                         st.rerun()
                 elif _bk_loaded:
                     st.markdown("<div style='padding-top:14px;'></div>", unsafe_allow_html=True)
                     if st.button("🗑 Limpiar todos", key="bk_del_all", use_container_width=True):
-                        st.session_state["bank_data"].clear()
+                        for fn in _bk_loaded:
+                           delete_bank_report(_current_comp_id, fn)
                         st.rerun()
 
             if df_full.empty:
@@ -2102,14 +2106,12 @@ if t:
     )
 
     if _bk_files:
-        if "bank_data" not in st.session_state:
-            st.session_state["bank_data"] = {}
         _needs_rerun = False
         _bk_prog = st.progress(0)
         for _bk_i, _bk_f in enumerate(_bk_files):
             _bk_prog.progress((_bk_i + 1) / len(_bk_files))
             _bk_key = _bk_f.name
-            if _bk_key not in st.session_state["bank_data"]:
+            if _bk_key not in _bk_loaded:
                 _bk_ext = os.path.splitext(_bk_f.name)[1].lower()
                 _bk_suf = _bk_ext if _bk_ext in (".pdf", ".xlsx", ".xls") else ".pdf"
                 with _tmplib.NamedTemporaryFile(suffix=_bk_suf, delete=False) as _tf:
@@ -2121,7 +2123,7 @@ if t:
                     else:
                         _bk_r = parse_bank_statement(_bk_tmp)
                         _tipo_icon = "📄"
-                    st.session_state["bank_data"][_bk_key] = _bk_r
+                    save_bank_report(_current_comp_id, _bk_key, _bk_r)
                     _nmov = len(_bk_r["movimientos"])
                     st.success(f"{_tipo_icon} **{_bk_key}** procesado exitosamente con {_nmov} movimientos.")
                     _needs_rerun = True

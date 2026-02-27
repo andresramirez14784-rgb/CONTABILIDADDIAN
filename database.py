@@ -6,6 +6,7 @@ Desarrollado por ANDRES FELIPE RAMIREZ GONZALES.
 import sqlite3
 import os
 import hashlib
+import pickle
 from datetime import datetime
 from pathlib import Path
 
@@ -137,6 +138,15 @@ def init_db():
         module      TEXT NOT NULL,
         allowed     INTEGER DEFAULT 1,
         UNIQUE(user_id, company_id, module)
+    );
+
+    CREATE TABLE IF NOT EXISTS bank_reports (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        company_id  INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        filename    TEXT NOT NULL,
+        data_blob   BLOB NOT NULL,
+        created_at  TEXT DEFAULT (datetime('now')),
+        UNIQUE(company_id, filename)
     );
     """)
     conn.commit()
