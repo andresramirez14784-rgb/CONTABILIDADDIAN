@@ -47,7 +47,8 @@ st.set_page_config(
 )
 
 # ─── CSS ──────────────────────────────────────────────────────────────────────
-st.markdown("""
+if st.session_state.get("authenticated"):
+    st.markdown("""
 <style>
 :root {
   --primary:#1F3864;--secondary:#2E75B6;--accent:#ED7D31;
@@ -186,6 +187,47 @@ ul[data-baseweb="menu"] li, ul[data-testid="stSelectboxVirtualDropdown"] li {
   color: #FFF !important;
 }
 
+/* Fix Expanders and Buttons to match Dark Theme */
+[data-testid="stExpander"] {
+  background-color: #162640 !important;
+  border: 1px solid #2A4A70 !important;
+  border-radius: 8px !important;
+}
+[data-testid="stExpander"] details summary {
+  background-color: #1E3550 !important;
+}
+[data-testid="stExpander"] details summary:hover {
+  background-color: #2A4A70 !important;
+}
+[data-testid="stExpander"] p, [data-testid="stExpander"] span, [data-testid="stExpander"] div {
+  color: #FFF !important;
+}
+
+.stButton > button {
+  background-color: #1A2B4A !important;
+  border: 1px solid #2E75B6 !important;
+  color: #FFF !important;
+  border-radius: 6px !important;
+}
+.stButton > button:hover {
+  background-color: #2E75B6 !important;
+  border-color: #58A0D6 !important;
+  color: #FFF !important;
+}
+.stButton > button p, .stButton > button div {
+  color: #FFF !important;
+}
+
+/* Primary Button exception */
+.stButton > button[data-testid="baseButton-primary"] {
+  background-color: #E24A4A !important;
+  border-color: #E24A4A !important;
+}
+.stButton > button[data-testid="baseButton-primary"]:hover {
+  background-color: #FF6B6B !important;
+  border-color: #FF6B6B !important;
+}
+
 /* ── MOBILE OPTIMIZATION ── */
 @media(max-width: 768px) {
   .kpi-card { padding: 12px 10px 10px; }
@@ -219,7 +261,7 @@ ul[data-baseweb="menu"] li, ul[data-testid="stSelectboxVirtualDropdown"] li {
   .kpi-card  { padding: 12px 8px; }
 }
 </style>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ─── Auth gate ────────────────────────────────────────────────────────────────
 require_auth()
