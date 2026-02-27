@@ -513,7 +513,9 @@ def get_bank_reports(company_id: int) -> dict:
     for row in rows:
         try:
             reports[row["filename"]] = pickle.loads(row["data_blob"])
-        except Exception:
+        except Exception as e:
+            import streamlit as st
+            st.error(f"Fallo grave cargando {row['filename']}: {str(e)}")
             pass
     return reports
 
