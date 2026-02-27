@@ -232,10 +232,12 @@ def get_current_user_id() -> int:
     return st.session_state.get("user_id", 0)
 
 
-# ─── Permission helpers ───────────────────────────────────────────────────────
 def allowed(module: str) -> bool:
     """Check if the current user's role allows access to a module."""
-    return can_access(get_current_role(), module)
+    user_id = get_current_user_id()
+    company = get_current_company()
+    company_id = company.get("id") if company else None
+    return can_access(get_current_role(), module, user_id, company_id)
 
 
 def require_permission(module: str):

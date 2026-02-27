@@ -14,7 +14,9 @@ from database import (init_db, get_all_companies, get_all_users, create_company,
                       update_company, toggle_company, update_user_role, toggle_user,
                       reset_password, get_user_roles, remove_user_from_company,
                       save_uploaded_file, save_upload_meta, get_uploads, get_latest_upload,
-                      get_recent_activity, log_action, ROLE_LABELS, ROLES, can_access)
+                      get_recent_activity, log_action, ROLE_LABELS, ROLES, can_access,
+                      update_user_profile, get_user_permissions, set_user_permissions,
+                      has_custom_permissions, ALL_MODULES, MODULE_LABELS)
 from auth import (require_auth, render_company_selector, get_current_company,
                   get_current_role, get_current_user_id, allowed, role_badge, logout)
 from data_loader import (load_file, compute_kpis, detect_hallazgos,
@@ -1649,27 +1651,24 @@ if t:
         with st.expander(f"✏️ Editar — {usr['nombre']}", expanded=False):
             ed1, ed2 = st.columns([3, 2])
 
-            # ── Editar nombre + toggle activo ─────────────────────────────────
+            # ── Editar nombre + email + toggle activo ──────────────────────────
             with ed1:
                 with st.form(f"edit_usr_{usr['id']}", clear_on_submit=False):
                     new_nombre = st.text_input("Nombre completo", value=usr["nombre"],
                                                key=f"nm_{usr['id']}")
                     new_email  = st.text_input("Correo", value=usr["email"],
-                                               key=f"em_{usr['id']}", disabled=True)
+                                               key=f"em_{usr['id']}")
                     new_pwd    = st.text_input("Nueva contraseña (dejar vacío = sin cambios)",
                                                type="password", key=f"pw_{usr['id']}")
 
                     activo_val = st.checkbox("✅ Usuario activo", value=is_activo,
                                             key=f"chk_{usr['id']}")
 
-                    if st.form_submit_button("💾 Guardar", type="primary", use_container_width=True):
-                        # Update name if changed
-                        if new_nombre.strip() and new_nombre.strip() != usr["nombre"]:
-                            conn_tmp = get_connection()
-                            conn_tmp.execute("UPDATE users SET nombre=? WHERE id=?",
-                                             (new_nombre.strip(), usr["id"]))
-                            conn_tmp.commit()
-                            conn_tmp.close()
+                    if st.form_submit_button("💾 Guardar Cambios de Perfil", type="primary", use_container_width=True):
+                        # Update name/email if changed
+                        if (new_nombre.strip() and new_nombre.strip() != usr["nombre"]) or \
+                           (new_email.strip() and new_email.strip() != usr["email"]):
+                            update_user_profile(usr["id"], new_nombre.strip(), new_email.strip())
                         # Update password if provided
                         if new_pwd:
                             reset_password(usr["id"], new_pwd)
@@ -1677,7 +1676,7 @@ if t:
                         if activo_val != is_activo:
                             toggle_user(usr["id"], activo_val)
                         log_action(uid, 0, "edit_user", usr["email"])
-                        st.success("✅ Usuario actualizado.")
+                        st.success("✅ Perfil de usuario actualizado.")
                         st.rerun()
 
             # ── Asignar rol por empresa ───────────────────────────────────────
@@ -1706,17 +1705,50 @@ if t:
                         arl = st.selectbox("Rol", ROLES,
                                            format_func=lambda r: ROLE_LABELS[r],
                                            key=f"ar_{usr['id']}")
-                        if st.form_submit_button("➕ Asignar", use_container_width=True):
+                        if st.form_submit_button("➕ Asignar Rol Predeterminado", use_container_width=True):
                             update_user_role(usr["id"], aco, arl)
                             st.success(f"Rol asignado.")
                             st.rerun()
                     else:
                         st.info("No hay empresas creadas.")
 
-
-
-
-# ══════════════════════════════════════════════════════════════════════════════
+            # ── Permisos Específicos (Checklist) ─────────────────────────────
+            if uroles:
+                st.markdown("---")
+                st.markdown("**⚙️ Permisos Específicos por Módulo**")
+                st.caption("Sobrescribe los accesos del rol predeterminado. Desmarca un módulo para bloquear el acceso, o márcalo para permitirlo.")
+                
+                # Seleccionar empresa para editar permisos
+                _comp_opts = {r["company_id"]: r["razon_social"] for r in uroles}
+                _sel_comp_id = st.selectbox("Selecciona la empresa para configurar permisos:", 
+                                            options=list(_comp_opts.keys()),
+                                            format_func=lambda x: _comp_opts[x],
+                                            key=f"sel_perm_co_{usr['id']}")
+                
+                # Formulario Checklist
+                with st.form(f"perm_form_{usr['id']}"):
+                    _current_perms = get_user_permissions(usr["id"], _sel_comp_id)
+                    # Get base role for this company to determine default checks
+                    _user_role_in_comp = next((r["role"] for r in uroles if r["company_id"] == _sel_comp_id), "viewer")
+                    
+                    _new_perms = {}
+                    # Usar 3 columnas para compactar
+                    pc1, pc2, pc3 = st.columns(3)
+                    cols = [pc1, pc2, pc3]
+                    
+                    for i, mod in enumerate(ALL_MODULES):
+                        _col = cols[i % 3]
+                        with _col:
+                            # Si no hay permiso custom, usar el default del rol
+                            _default_val = _current_perms.get(mod, can_access(_user_role_in_comp, mod))
+                            _lbl = MODULE_LABELS.get(mod, mod.title())
+                            _new_perms[mod] = st.checkbox(_lbl, value=_default_val, key=f"chk_perm_{usr['id']}_{mod}")
+                            
+                    if st.form_submit_button("💾 Guardar Permisos", type="primary"):
+                        set_user_permissions(usr["id"], _sel_comp_id, _new_perms)
+                        log_action(uid, _sel_comp_id, "edit_permissions", usr["email"])
+                        st.success(f"✅ Permisos actualizados para {_comp_opts[_sel_comp_id]}.")
+                        st.rerun()# ══════════════════════════════════════════════════════════════════════════════
 # EXTRACTOS BANCARIOS — Dashboard por cuenta individual (auto-generado)
 # Cada cuenta cargada (PDF o Excel) genera su propio tab con KPIs, graficos,
 # filtros por fecha/categoria y exportacion Excel independiente.

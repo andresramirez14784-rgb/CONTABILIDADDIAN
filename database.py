@@ -1,6 +1,7 @@
 """
-ContaDash — SQLite database manager.
-Handles companies, users, roles, and uploaded file metadata.
+Conciliador DIAN y Bancario — SQLite database manager.
+Handles companies, users, roles, permissions, and uploaded file metadata.
+Desarrollado por ANDRES FELIPE RAMIREZ GONZALES.
 """
 import sqlite3
 import os
@@ -40,6 +41,26 @@ PERMISSIONS = {
     "extractos":    4,  # todos los roles (análisis extractos bancarios)
     "empresas":     0,  # admin only
     "usuarios":     0,  # admin only
+}
+
+# All available modules (for checklist UI)
+ALL_MODULES = list(PERMISSIONS.keys())
+MODULE_LABELS = {
+    "dashboard": "🏠 Dashboard",
+    "ventas": "📄 Ventas",
+    "compras": "📦 Compras",
+    "iva": "💰 IVA",
+    "nomina": "👥 Nómina",
+    "exogena": "🔗 Exógena",
+    "hallazgos": "🔍 Hallazgos",
+    "datos": "📋 Datos",
+    "exportar": "📥 Exportar",
+    "cargar": "📂 Cargar Datos",
+    "clientes": "👤 Clientes",
+    "proveedores": "🏪 Proveedores",
+    "extractos": "🏦 Extractos",
+    "empresas": "🏢 Empresas",
+    "usuarios": "👤 Usuarios",
 }
 
 # Auditor has read access to exogena despite index
@@ -107,6 +128,15 @@ def init_db():
         action      TEXT NOT NULL,
         detail      TEXT DEFAULT '',
         created_at  TEXT DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS user_permissions (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        company_id  INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+        module      TEXT NOT NULL,
+        allowed     INTEGER DEFAULT 1,
+        UNIQUE(user_id, company_id, module)
     );
     """)
     conn.commit()
@@ -300,6 +330,50 @@ def reset_password(user_id: int, new_password: str):
     conn.close()
 
 
+def update_user_profile(user_id: int, nombre: str, email: str):
+    """Update user name and email."""
+    conn = get_connection()
+    conn.execute("UPDATE users SET nombre=?, email=? WHERE id=?", (nombre, email, user_id))
+    conn.commit()
+    conn.close()
+
+
+# ─── User Permissions (checklist) ────────────────────────────────────────────────
+def get_user_permissions(user_id: int, company_id: int) -> dict:
+    """Get per-user permission overrides for a company. Returns {module: bool}."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT module, allowed FROM user_permissions WHERE user_id=? AND company_id=?",
+        (user_id, company_id)
+    ).fetchall()
+    conn.close()
+    return {r["module"]: bool(r["allowed"]) for r in rows}
+
+
+def set_user_permissions(user_id: int, company_id: int, permissions: dict):
+    """Set per-user permissions. permissions = {module: True/False}."""
+    conn = get_connection()
+    for module, allowed in permissions.items():
+        conn.execute("""
+            INSERT INTO user_permissions (user_id, company_id, module, allowed)
+            VALUES (?,?,?,?)
+            ON CONFLICT(user_id, company_id, module) DO UPDATE SET allowed=excluded.allowed
+        """, (user_id, company_id, module, int(allowed)))
+    conn.commit()
+    conn.close()
+
+
+def has_custom_permissions(user_id: int, company_id: int) -> bool:
+    """Check if user has any custom per-module permissions set."""
+    conn = get_connection()
+    count = conn.execute(
+        "SELECT COUNT(*) FROM user_permissions WHERE user_id=? AND company_id=?",
+        (user_id, company_id)
+    ).fetchone()[0]
+    conn.close()
+    return count > 0
+
+
 # ─── Uploaded files ───────────────────────────────────────────────────────────
 def save_upload_meta(company_id: int, user_id: int, report_type: str,
                      filename: str, filepath: str, periodo: str = "", rows: int = 0):
@@ -373,10 +447,16 @@ def get_recent_activity(company_id: int = None, limit: int = 50) -> list[dict]:
 
 
 # ─── Permission check ─────────────────────────────────────────────────────────
-def can_access(role: str, module: str) -> bool:
-    """Check if a role can access a module."""
+def can_access(role: str, module: str, user_id: int = None, company_id: int = None) -> bool:
+    """Check if a role can access a module. Per-user overrides take priority."""
     if not role:
         return False
+    # Check per-user permission overrides first
+    if user_id and company_id:
+        perms = get_user_permissions(user_id, company_id)
+        if module in perms:
+            return perms[module]
+    # Fall back to role-based defaults
     role_index = ROLES.index(role) if role in ROLES else 99
     required = PERMISSIONS.get(module, 99)
     # Auditor gets read-only on select modules
