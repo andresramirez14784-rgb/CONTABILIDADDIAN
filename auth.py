@@ -1,13 +1,31 @@
 """
-ContaDash — Authentication & RBAC.
+Conciliador DIAN y Bancario — Authentication & RBAC.
 Uses bcrypt for password hashing, Streamlit session_state for sessions.
+Desarrollado por ANDRES FELIPE RAMIREZ GONZALES.
 """
 import streamlit as st
 import bcrypt
+import base64
+import os
 from database import (
     get_connection, get_companies, can_access,
     ROLE_LABELS, log_action,
 )
+
+# ─── App Branding ─────────────────────────────────────────────────────────────
+APP_NAME = "Conciliador DIAN y Bancario"
+APP_SUBTITLE = "Sistema de Auditoría y Conciliación Tributaria"
+APP_AUTHOR = "ANDRES FELIPE RAMIREZ GONZALES"
+
+def _get_logo_b64():
+    """Load logo as base64 from file if present."""
+    logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
+    if not os.path.exists(logo_path):
+        logo_path = os.path.join(os.path.dirname(__file__), "logo.jpg")
+    if os.path.exists(logo_path):
+        with open(logo_path, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
 
 
 # ─── Login / Logout ───────────────────────────────────────────────────────────
@@ -62,34 +80,114 @@ def require_auth():
 
 
 def _render_login():
-    """Render the login page inline."""
-    st.markdown("""
+    """Render split-screen login page with logo panel and form panel."""
+    logo_b64 = _get_logo_b64()
+    logo_html = ""
+    if logo_b64:
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:180px;height:180px;object-fit:contain;border-radius:20px;margin-bottom:24px;box-shadow:0 4px 24px rgba(0,0,0,0.3);" />'
+    else:
+        logo_html = '<div style="font-size:5rem;margin-bottom:16px;">📊</div>'
+
+    st.markdown(f"""
     <style>
-    .login-box {
-        max-width: 420px; margin: 80px auto 0 auto;
-        background: #152238; border: 1px solid #2A3F5F;
-        border-radius: 16px; padding: 40px 36px;
-        box-shadow: 0 8px 40px rgba(0,0,0,0.5);
-    }
+    .login-split {{
+        display: flex;
+        min-height: 92vh;
+        margin: -1rem -1rem 0 -1rem;
+        border-radius: 0;
+    }}
+    .login-left {{
+        flex: 1;
+        background: linear-gradient(135deg, #1a8bd1 0%, #0a4f8a 40%, #062d5a 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        position: relative;
+    }}
+    .login-left h1 {{
+        color: white;
+        font-size: 2rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        margin: 0 0 8px 0;
+        text-align: center;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }}
+    .login-left .subtitle {{
+        color: rgba(255,255,255,0.8);
+        font-size: 0.95rem;
+        text-align: center;
+        max-width: 320px;
+        line-height: 1.5;
+    }}
+    .login-left .author {{
+        position: absolute;
+        bottom: 30px;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.75rem;
+        text-align: center;
+        letter-spacing: 0.5px;
+    }}
+    .login-left .author b {{
+        color: rgba(255,255,255,0.85);
+    }}
+    .login-right {{
+        flex: 1;
+        background: #0F1C33;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }}
+    .login-right-inner {{
+        max-width: 400px;
+        width: 100%;
+    }}
+    .login-right-inner h2 {{
+        color: white;
+        font-size: 1.6rem;
+        font-weight: 700;
+        margin: 0 0 6px 0;
+        text-align: center;
+    }}
+    .login-right-inner .hint {{
+        color: #7A90AB;
+        font-size: 0.85rem;
+        text-align: center;
+        margin-bottom: 28px;
+    }}
+    @media(max-width:768px) {{
+        .login-split {{ flex-direction: column; }}
+        .login-left {{ min-height: 30vh; padding: 24px; }}
+        .login-left h1 {{ font-size: 1.4rem; }}
+        .login-right {{ padding: 24px; }}
+    }}
     </style>
+    <div class="login-split">
+      <div class="login-left">
+        {logo_html}
+        <h1>{APP_NAME}</h1>
+        <div class="subtitle">{APP_SUBTITLE}</div>
+        <div class="author"><b>DESARROLLADO POR {APP_AUTHOR}</b><br>Software de gestión contable</div>
+      </div>
+      <div class="login-right">
+        <div class="login-right-inner">
+          <h2>Bienvenido</h2>
+          <div class="hint">Inicia sesión en tu cuenta para continuar</div>
+        </div>
+      </div>
+    </div>
     """, unsafe_allow_html=True)
 
-    col_l, col_c, col_r = st.columns([1, 2, 1])
+    col_l, col_c, col_r = st.columns([1.2, 2, 1.2])
     with col_c:
-        st.markdown("""
-        <div class="login-box">
-          <div style="text-align:center;margin-bottom:28px">
-            <div style="font-size:3rem">📊</div>
-            <div style="font-size:1.5rem;font-weight:700;color:white;letter-spacing:1px">ContaDash</div>
-            <div style="color:#7A90AB;font-size:.85rem">Plataforma de Auditoría Tributaria</div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-
         with st.form("login_form", clear_on_submit=False):
             email    = st.text_input("Correo electrónico", placeholder="usuario@ejemplo.co")
             password = st.text_input("Contraseña", type="password", placeholder="••••••••")
-            submitted = st.form_submit_button("Iniciar Sesión", use_container_width=True, type="primary")
+            submitted = st.form_submit_button("INICIAR SESIÓN", use_container_width=True, type="primary")
 
         if submitted:
             if not email or not password:

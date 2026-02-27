@@ -1,7 +1,7 @@
 """
-ContaDash v2 — Ecosistema de Auditoría Tributaria
+Conciliador DIAN y Bancario — Sistema de Auditoría y Conciliación Tributaria
 Multi-empresa | Usuarios y Roles | DIAN FE + Nómina + Exógena + Retenciones
-Compatible: SIIGO, Helisa, ContaSOL, WinContab, Portal DIAN
+Desarrollado por ANDRES FELIPE RAMIREZ GONZALES
 """
 import streamlit as st
 import pandas as pd
@@ -38,7 +38,7 @@ init_db()
 
 # ─── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="ContaDash v2 | Auditoría DIAN",
+    page_title="Conciliador DIAN y Bancario | R&H",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -204,11 +204,18 @@ def section_header(txt):
 
 # ─── Sidebar ──────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div style="text-align:center;padding:10px 0 18px 0">
-      <div style="font-size:2.2rem">📊</div>
-      <div style="font-size:1.2rem;font-weight:700;color:white;letter-spacing:1px">ContaDash v2</div>
-      <div style="font-size:.72rem;color:#9DC3E6">Auditoría Tributaria DIAN</div>
+    # Logo en sidebar
+    from auth import _get_logo_b64, APP_NAME, APP_AUTHOR
+    _sb_logo = _get_logo_b64()
+    if _sb_logo:
+        st.markdown(f"""
+        <div style="text-align:center;padding:10px 0 8px 0">
+          <img src="data:image/png;base64,{_sb_logo}" style="width:80px;height:80px;object-fit:contain;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.3);" />
+        </div>""", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="text-align:center;padding:4px 0 18px 0">
+      <div style="font-size:1rem;font-weight:700;color:white;letter-spacing:0.5px;line-height:1.3">{APP_NAME}</div>
+      <div style="font-size:.68rem;color:#9DC3E6">Sistema de Auditoría y Conciliación</div>
     </div>""", unsafe_allow_html=True)
     st.markdown("---")
     st.markdown('<div style="color:#9DC3E6;font-size:.78rem;font-weight:700;letter-spacing:1px">🏢 EMPRESA ACTIVA</div>',
@@ -234,7 +241,7 @@ with st.sidebar:
     if st.button("Cerrar Sesión", use_container_width=True):
         logout()
         st.rerun()
-    st.markdown('<div style="color:#4A6080;font-size:.68rem;text-align:center">v2.0 · Al Día Contador 2026</div>',
+    st.markdown(f'<div style="color:#4A6080;font-size:.62rem;text-align:center;line-height:1.4">Desarrollado por<br><b style="color:#7A90AB">{APP_AUTHOR}</b></div>',
                 unsafe_allow_html=True)
 
 
@@ -488,7 +495,11 @@ st.session_state["_meses_all_cache"] = _meses_all
 # ─── Header ───────────────────────────────────────────────────────────────────
 c_logo, c_title, c_badge = st.columns([1,6,2])
 with c_logo:
-    st.markdown('<div style="font-size:3rem;text-align:center">📊</div>', unsafe_allow_html=True)
+    _hdr_logo = _get_logo_b64()
+    if _hdr_logo:
+        st.markdown(f'<div style="text-align:center"><img src="data:image/png;base64,{_hdr_logo}" style="width:50px;height:50px;object-fit:contain;border-radius:8px;"/></div>', unsafe_allow_html=True)
+    else:
+        st.markdown('<div style="font-size:3rem;text-align:center">📊</div>', unsafe_allow_html=True)
 with c_title:
     _has_data = not (ventas_df_raw.empty and compras_df_raw.empty)
     _data_badge = (
