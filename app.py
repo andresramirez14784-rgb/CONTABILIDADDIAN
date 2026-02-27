@@ -1626,7 +1626,7 @@ if t:
                         st.success(f"✅ Usuario **{nnomb}** creado exitosamente.")
                         st.rerun()
                     except Exception as ex:
-                        st.error(f"Error: {ex}")
+                        st.error("Error al crear usuario. Verifica que no exista ya el correo.")
 
     st.markdown("---")
     usrs = get_all_users()
@@ -1673,24 +1673,22 @@ if t:
                                                key=f"em_{usr['id']}")
                     new_pwd    = st.text_input("Nueva contraseña (dejar vacío = sin cambios)",
                                                type="password", key=f"pw_{usr['id']}")
-
                     activo_val = st.checkbox("✅ Usuario activo", value=is_activo,
                                             key=f"chk_{usr['id']}")
 
                     if st.form_submit_button("💾 Guardar Cambios de Perfil", type="primary", use_container_width=True):
-                        # Update name/email if changed
-                        if (new_nombre.strip() and new_nombre.strip() != usr["nombre"]) or \
-                           (new_email.strip() and new_email.strip() != usr["email"]):
-                            update_user_profile(usr["id"], new_nombre.strip(), new_email.strip())
-                        # Update password if provided
-                        if new_pwd:
-                            reset_password(usr["id"], new_pwd)
-                        # Toggle active if changed
-                        if activo_val != is_activo:
-                            toggle_user(usr["id"], activo_val)
-                        log_action(uid, 0, "edit_user", usr["email"])
-                        st.success("✅ Perfil de usuario actualizado.")
-                        st.rerun()
+                        try:
+                            if (new_nombre.strip() and new_nombre.strip() != usr["nombre"]) or \
+                               (new_email.strip() and new_email.strip() != usr["email"]):
+                                update_user_profile(usr["id"], new_nombre.strip(), new_email.strip())
+                            if new_pwd:
+                                reset_password(usr["id"], new_pwd)
+                            if activo_val != is_activo:
+                                toggle_user(usr["id"], activo_val)
+                            log_action(uid, 0, "edit_user", usr["email"])
+                            st.success("✅ Perfil de usuario actualizado. Presiona guardar nuevamente si el UI no recarga automático.")
+                        except Exception as e:
+                            st.error(f"Ocurrió un error al actualizar el usuario: {str(e)}")
 
             # ── Asignar rol por empresa ───────────────────────────────────────
             with ed2:
@@ -1719,9 +1717,11 @@ if t:
                                            format_func=lambda r: ROLE_LABELS[r],
                                            key=f"ar_{usr['id']}")
                         if st.form_submit_button("➕ Asignar Rol Predeterminado", use_container_width=True):
-                            update_user_role(usr["id"], aco, arl)
-                            st.success(f"Rol asignado.")
-                            st.rerun()
+                            try:
+                                update_user_role(usr["id"], aco, arl)
+                                st.success(f"Rol asignado. Por favor guarda los cambios (arriba) para refrescar.")
+                            except Exception as e:
+                                st.error(f"Error asignando rol: {e}")
                     else:
                         st.info("No hay empresas creadas.")
 
@@ -1758,10 +1758,12 @@ if t:
                             _new_perms[mod] = st.checkbox(_lbl, value=_default_val, key=f"chk_perm_{usr['id']}_{mod}")
                             
                     if st.form_submit_button("💾 Guardar Permisos", type="primary"):
-                        set_user_permissions(usr["id"], _sel_comp_id, _new_perms)
-                        log_action(uid, _sel_comp_id, "edit_permissions", usr["email"])
-                        st.success(f"✅ Permisos actualizados para {_comp_opts[_sel_comp_id]}.")
-                        st.rerun()# ══════════════════════════════════════════════════════════════════════════════
+                        try:
+                            set_user_permissions(usr["id"], _sel_comp_id, _new_perms)
+                            log_action(uid, _sel_comp_id, "edit_permissions", usr["email"])
+                            st.success(f"✅ Permisos actualizados para {_comp_opts[_sel_comp_id]}.")
+                        except Exception as e:
+                            st.error(f"Error guardando permisos: {e}")# ══════════════════════════════════════════════════════════════════════════════
 # EXTRACTOS BANCARIOS — Dashboard por cuenta individual (auto-generado)
 # Cada cuenta cargada (PDF o Excel) genera su propio tab con KPIs, graficos,
 # filtros por fecha/categoria y exportacion Excel independiente.
