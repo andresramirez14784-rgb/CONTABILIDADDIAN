@@ -1762,61 +1762,7 @@ if t:
 
     section_header("🏦 Extractos Bancarios — Dashboard por Cuenta")
 
-    # ── Uploader PDF + Excel hibrido ──────────────────────────────────────
-    _bk_files = st.file_uploader(
-        "📤 Subir extractos — PDF o Excel (Bancolombia, Nequi, Davivienda, BBVA...)",
-        type=["pdf", "xlsx", "xls"],
-        accept_multiple_files=True,
-        key="bank_pdfs",
-        help="Cada cuenta genera automaticamente su propio dashboard separado.",
-    )
-
-    if _bk_files:
-        if "bank_data" not in st.session_state:
-            st.session_state["bank_data"] = {}
-        _bk_prog = st.progress(0)
-        for _bk_i, _bk_f in enumerate(_bk_files):
-            _bk_prog.progress((_bk_i + 1) / len(_bk_files))
-            _bk_key = _bk_f.name
-            if _bk_key not in st.session_state["bank_data"]:
-                _bk_ext = os.path.splitext(_bk_f.name)[1].lower()
-                _bk_suf = _bk_ext if _bk_ext in (".pdf", ".xlsx", ".xls") else ".pdf"
-                with _tmplib.NamedTemporaryFile(suffix=_bk_suf, delete=False) as _tf:
-                    _tf.write(_bk_f.read()); _bk_tmp = _tf.name
-                try:
-                    if _bk_ext in (".xlsx", ".xls"):
-                        _bk_r = parse_bank_statement_excel(_bk_tmp)
-                        _tipo_icon = "📊"
-                    else:
-                        _bk_r = parse_bank_statement(_bk_tmp)
-                        _tipo_icon = "📄"
-                    st.session_state["bank_data"][_bk_key] = _bk_r
-                    _nmov = len(_bk_r["movimientos"])
-                    st.success(
-                        f"{_tipo_icon} **{_bk_f.name}** "
-                        f"| 🏦 {_bk_r['banco']} "
-                        f"| 💳 Cta: **{_bk_r['cuenta'] or 'N/D'}** "
-                        f"| 👤 {_bk_r['titular'] or 'sin nombre'} "
-                        f"| 📅 {_bk_r['periodo'] or 'N/D'} "
-                        f"| **{_nmov} movimientos**"
-                    )
-                except Exception as _ex:
-                    st.error(f"❌ **{_bk_f.name}**: {_ex}")
-                finally:
-                    try:
-                        import os as _os_bk; _os_bk.unlink(_bk_tmp)
-                    except Exception:
-                        pass
-        _bk_prog.empty()
-
     _bk_loaded = st.session_state.get("bank_data", {})
-
-    # ── Boton limpiar ─────────────────────────────────────────────────────
-    if _bk_loaded:
-        _xc1, _xc2 = st.columns([9, 2])
-        with _xc2:
-            if st.button("🗑 Limpiar todo", key="clear_banks", use_container_width=True):
-                st.session_state.pop("bank_data"); st.rerun()
 
     if _bk_loaded:
         # ── Agrupar por banco + cuenta ────────────────────────────────────
@@ -1831,8 +1777,10 @@ if t:
                     "periodos": [],
                     "frames":   [],
                     "metas":    [],
+                    "filenames": [],
                 }
             _bk_accounts[_ak]["periodos"].append(_fd.get("periodo", ""))
+            _bk_accounts[_ak]["filenames"].append(_fn)
             if isinstance(_fd.get("movimientos"), pd.DataFrame) and not _fd["movimientos"].empty:
                 _bk_accounts[_ak]["frames"].append(_fd["movimientos"])
             if _fd.get("meta"):
@@ -1846,27 +1794,42 @@ if t:
         _bk_all = pd.concat(_bk_all_frames, ignore_index=True) if _bk_all_frames else pd.DataFrame()
 
         # ── Funcion auxiliar: dashboard completo por cuenta ───────────────
-        def _render_bk_dashboard(df_full, aid, banco, cuenta, titular, periodos, metas):
+        def _render_bk_dashboard(df_full, aid, banco, cuenta, titular, periodos, metas, filenames=None):
             _CARD_BG   = "background:linear-gradient(135deg,#162640,#1E3550)"
             _per_str   = " · ".join(p for p in periodos if p) or "Periodo no detectado"
             _cta_disp  = cuenta or "N/D"
             _tit_disp  = titular or "Titular no detectado"
-            st.markdown(
-                '<div style="' + _CARD_BG + ';border-left:4px solid #2E75B6;'
-                'border-radius:10px;padding:14px 20px;margin-bottom:14px;'
-                'display:flex;justify-content:space-between;align-items:center">'
-                '<div>'
-                '<span style="font-size:1.5rem">🏦</span>'
-                f'<strong style="color:#9DC3E6;font-size:1.1rem;margin-left:8px">{banco}</strong>'
-                '<span style="color:#5A7090;margin:0 10px">|</span>'
-                f'<code style="color:#70C995;font-size:1rem">Cta: {_cta_disp}</code>'
-                '<span style="color:#5A7090;margin:0 10px">|</span>'
-                f'<span style="color:#BDD3E8">{_tit_disp}</span>'
-                '</div>'
-                f'<div style="color:#5A7090;font-size:.8rem;text-align:right">{_per_str}</div>'
-                '</div>',
-                unsafe_allow_html=True
-            )
+            
+            _dh1, _dh2 = st.columns([8, 2])
+            with _dh1:
+                st.markdown(
+                    '<div style="' + _CARD_BG + ';border-left:4px solid #2E75B6;'
+                    'border-radius:10px;padding:14px 20px;margin-bottom:14px;'
+                    'display:flex;justify-content:space-between;align-items:center">'
+                    '<div>'
+                    '<span style="font-size:1.5rem">🏦</span>'
+                    f'<strong style="color:#9DC3E6;font-size:1.1rem;margin-left:8px">{banco}</strong>'
+                    '<span style="color:#5A7090;margin:0 10px">|</span>'
+                    f'<code style="color:#70C995;font-size:1rem">Cta: {_cta_disp}</code>'
+                    '<span style="color:#5A7090;margin:0 10px">|</span>'
+                    f'<span style="color:#BDD3E8">{_tit_disp}</span>'
+                    '</div>'
+                    f'<div style="color:#5A7090;font-size:.8rem;text-align:right">{_per_str}</div>'
+                    '</div>',
+                    unsafe_allow_html=True
+                )
+            with _dh2:
+                if filenames:
+                    st.markdown("<div style='padding-top:14px;'></div>", unsafe_allow_html=True)
+                    if st.button("🗑 Limpiar reporte", key=f"bk_del_{aid}", use_container_width=True):
+                        for fn in filenames:
+                            st.session_state["bank_data"].pop(fn, None)
+                        st.rerun()
+                elif _bk_loaded:
+                    st.markdown("<div style='padding-top:14px;'></div>", unsafe_allow_html=True)
+                    if st.button("🗑 Limpiar todos", key="bk_del_all", use_container_width=True):
+                        st.session_state["bank_data"].clear()
+                        st.rerun()
 
             if df_full.empty:
                 st.warning("⚠ No se encontraron movimientos para esta cuenta.")
@@ -2073,7 +2036,7 @@ if t:
                 _bk_all, "_conso",
                 "Todas las cuentas", "",
                 f"{len(_bk_accounts)} cuenta(s) cargada(s)",
-                [], []
+                [], [], None
             )
 
         # Tabs 1..N: una por cada cuenta (auto-generado al cargar nuevos extractos)
@@ -2085,7 +2048,7 @@ if t:
                 _render_bk_dashboard(
                     _acct_df, _safe_id,
                     _av["banco"], _av["cuenta"],
-                    _av["titular"], _av["periodos"], _av["metas"]
+                    _av["titular"], _av["periodos"], _av["metas"], _av["filenames"]
                 )
 
     else:
@@ -2097,8 +2060,8 @@ if t:
             '<div style="font-size:3.5rem;margin-bottom:14px">🏦</div>'
             '<h3 style="color:#9DC3E6;margin:0 0 8px 0">Sube tus Extractos Bancarios</h3>'
             '<p style="color:#6A8AAB;font-size:.9rem;margin:0 0 10px 0">'
-            'Cada cuenta genera automaticamente su propio dashboard con '
-            'KPIs fiscales, graficos y filtros por fecha y categoria'
+            'Sube tus reportes y cada cuenta generará automáticamente su propio dashboard con '
+            'KPIs fiscales, gráficos y filtros por fecha y categoría.'
             '</p>'
             '<div style="display:inline-flex;gap:10px;margin-bottom:18px">'
             '<span style="background:#1A3A5C;border-radius:20px;padding:4px 14px;'
@@ -2108,17 +2071,53 @@ if t:
             '<span style="background:#1A3A5C;border-radius:20px;padding:4px 14px;'
             'color:#F0C060;font-size:.8rem">📋 Excel .xls</span>'
             '</div>'
-            '<div style="display:grid;grid-template-columns:1fr 1fr;'
-            'gap:8px;max-width:480px;margin:0 auto;text-align:left">'
-            '<div style="color:#7A90AB;font-size:.8rem">📈 Ingresos / Egresos por cuenta</div>'
-            '<div style="color:#7A90AB;font-size:.8rem">💸 GMF / 4x1000 automatico</div>'
-            '<div style="color:#7A90AB;font-size:.8rem">🔒 Retenciones detectadas</div>'
-            '<div style="color:#7A90AB;font-size:.8rem">🏦 Intereses pagados / recibidos</div>'
-            '<div style="color:#7A90AB;font-size:.8rem">📅 Filtro por rango de fechas</div>'
-            '<div style="color:#7A90AB;font-size:.8rem">📊 Graficos mes y categoria</div>'
-            '</div>'
-            '<p style="color:#4A6A8A;font-size:.75rem;margin:16px 0 0 0">'
-            'Bancolombia · Davivienda · BBVA · Banco de Bogota · Nequi · Bold'
-            '</p></div>',
+            '</div>',
             unsafe_allow_html=True
         )
+
+    st.markdown("---")
+    
+    # ── Uploader PDF + Excel hibrido (ahora abajo) ────────────────────────
+    _bk_files = st.file_uploader(
+        "📤 Subir extractos — PDF o Excel (Bancolombia, Nequi, Davivienda, BBVA...)",
+        type=["pdf", "xlsx", "xls"],
+        accept_multiple_files=True,
+        key="bank_pdfs",
+        help="Cada archivo cargado alimentará los dashboards superiores independientemente.",
+    )
+
+    if _bk_files:
+        if "bank_data" not in st.session_state:
+            st.session_state["bank_data"] = {}
+        _needs_rerun = False
+        _bk_prog = st.progress(0)
+        for _bk_i, _bk_f in enumerate(_bk_files):
+            _bk_prog.progress((_bk_i + 1) / len(_bk_files))
+            _bk_key = _bk_f.name
+            if _bk_key not in st.session_state["bank_data"]:
+                _bk_ext = os.path.splitext(_bk_f.name)[1].lower()
+                _bk_suf = _bk_ext if _bk_ext in (".pdf", ".xlsx", ".xls") else ".pdf"
+                with _tmplib.NamedTemporaryFile(suffix=_bk_suf, delete=False) as _tf:
+                    _tf.write(_bk_f.read()); _bk_tmp = _tf.name
+                try:
+                    if _bk_ext in (".xlsx", ".xls"):
+                        _bk_r = parse_bank_statement_excel(_bk_tmp)
+                        _tipo_icon = "📊"
+                    else:
+                        _bk_r = parse_bank_statement(_bk_tmp)
+                        _tipo_icon = "📄"
+                    st.session_state["bank_data"][_bk_key] = _bk_r
+                    _nmov = len(_bk_r["movimientos"])
+                    st.success(f"{_tipo_icon} **{_bk_key}** procesado exitosamente con {_nmov} movimientos.")
+                    _needs_rerun = True
+                except Exception as _ex:
+                    st.error(f"❌ **{_bk_key}**: {_ex}")
+                finally:
+                    try:
+                        import os as _os_bk; _os_bk.unlink(_bk_tmp)
+                    except Exception:
+                        pass
+        _bk_prog.empty()
+        if _needs_rerun:
+            st.rerun()
+
