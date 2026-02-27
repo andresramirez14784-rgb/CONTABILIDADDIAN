@@ -1805,16 +1805,16 @@ if t:
                 st.markdown(
                     '<div style="' + _CARD_BG + ';border-left:4px solid #2E75B6;'
                     'border-radius:10px;padding:14px 20px;margin-bottom:14px;'
-                    'display:flex;justify-content:space-between;align-items:center">'
-                    '<div>'
+                    'display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">'
+                    '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;">'
                     '<span style="font-size:1.5rem">🏦</span>'
-                    f'<strong style="color:#9DC3E6;font-size:1.1rem;margin-left:8px">{banco}</strong>'
-                    '<span style="color:#5A7090;margin:0 10px">|</span>'
+                    f'<strong style="color:#9DC3E6;font-size:1.1rem">{banco}</strong>'
+                    '<span style="color:#5A7090">|</span>'
                     f'<code style="color:#70C995;font-size:1rem">Cta: {_cta_disp}</code>'
-                    '<span style="color:#5A7090;margin:0 10px">|</span>'
-                    f'<span style="color:#BDD3E8">{_tit_disp}</span>'
+                    '<span style="color:#5A7090">|</span>'
+                    f'<span style="color:#BDD3E8;word-break:break-all;">{_tit_disp}</span>'
                     '</div>'
-                    f'<div style="color:#5A7090;font-size:.8rem;text-align:right">{_per_str}</div>'
+                    f'<div style="color:#5A7090;font-size:.8rem;text-align:right;min-width:150px;">{_per_str}</div>'
                     '</div>',
                     unsafe_allow_html=True
                 )
