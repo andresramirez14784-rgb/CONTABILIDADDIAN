@@ -1,0 +1,84 @@
+=======================================================
+  ContaDash v2 - Ecosistema Multi-Empresa DIAN
+  Compatible con: SIIGO, Helisa, ContaSOL, WinContab
+=======================================================
+
+REQUISITOS
+----------
+- Python 3.10 o superior (https://www.python.org)
+- Conexion a internet (solo para instalar dependencias)
+
+INSTALACION (primera vez)
+--------------------------
+1. Abrir CMD o PowerShell en la carpeta contaduria_app
+2. Ejecutar:
+   pip install streamlit pandas plotly openpyxl xlsxwriter python-docx bcrypt
+
+INICIAR LA APP
+--------------
+Opcion A: Doble clic en  INICIAR_APP.bat
+Opcion B: Abrir CMD en la carpeta y ejecutar:
+   python -m streamlit run app.py
+
+Luego abrir en el navegador: http://localhost:8501
+
+CREDENCIALES DEMO
+-----------------
+  Administrador:    admin@contadash.co      / Admin2026!
+  Contador Senior:  contador@contadash.co   / Contador2026!
+  Auditor:          auditor@contadash.co    / Auditor2026!
+  Solo Lectura:     viewer@contadash.co     / Viewer2026!
+
+ROLES Y PERMISOS
+----------------
+  Admin         - Acceso total: empresas, usuarios, todos los modulos
+  Contador Sr.  - Dashboard, Ventas, Compras, IVA, Nomina, Exogena, Exportar
+  Contador      - Dashboard, Ventas, Compras, IVA, Nomina (sin Exogena Admin)
+  Auditor       - Solo lectura en todos los modulos de datos
+  Viewer        - Dashboard, Ventas, Compras, IVA, Hallazgos (solo lectura)
+
+ACCESO DESDE CELULAR (misma red WiFi)
+--------------------------------------
+1. Inicia la app en el PC
+2. En el celular abre el navegador
+3. Entra a:  http://<IP-de-tu-PC>:8501
+   (ej: http://192.168.1.100:8501)
+
+CARGAR ARCHIVOS DIAN
+---------------------
+En cada pestana (Ventas, Compras, Nomina, Exogena) hay un uploader:
+- Ventas / Compras: archivos Excel exportados del portal DIAN FE
+- Nomina Electronica: Excel del portal DIAN Nomina
+- Informacion Exogena: formatos 1001, 1007, 1008 en Excel
+- Por defecto carga automaticamente los archivos demo de:
+  C:\Users\USUARIO\Downloads\VENTAS ENERO - FEBRERO ANDRES.xlsx
+  C:\Users\USUARIO\Downloads\COMPRAS ENERO - FEBRERO ANDRES.xlsx
+
+PESTANAS DEL DASHBOARD
+-----------------------
+1. Dashboard    - KPIs + graficos resumen
+2. Ventas       - Analisis facturas emitidas DIAN
+3. Compras      - Analisis facturas recibidas DIAN
+4. IVA          - Conciliacion bimestral Form 300
+5. Nomina       - Analisis nomina electronica DIAN
+6. Exogena      - Cruce informacion exogena DIAN
+7. Hallazgos    - Riesgos tributarios H1-H14
+8. Datos        - Explorador de datos fuente
+9. Exportar     - Genera Excel (.xlsx) + Word (.docx)
+10. Empresas    - CRUD empresas (solo Admin)
+11. Usuarios    - CRUD usuarios y roles (solo Admin)
+
+GESTIONAR EMPRESAS Y USUARIOS (Admin)
+--------------------------------------
+- Ir a pestana "Empresas" para crear/editar NITs
+- Ir a pestana "Usuarios" para crear cuentas y asignar roles
+- Cada empresa tiene sus propios archivos aislados
+
+AVISO LEGAL
+-----------
+Caso de estudio con valores ilustrativos.
+Confrontar siempre con declaraciones DIAN oficiales.
+
+SOPORTE
+-------
+v2.0 - Al Dia Contador 2026

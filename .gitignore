@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Directorios de datos propios de la aplicación
+data/
+uploads/
+*.db
+*.sqlite3
+
+# Entornos virtuales
+venv/
+env/
+.env
+
+# Archivos de SO
+.DS_Store
+Thumbs.db
