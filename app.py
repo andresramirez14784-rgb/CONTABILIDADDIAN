@@ -150,6 +150,21 @@ header[data-testid="stHeader"]{background:rgba(15,28,51,0.95)!important;}
   color: white !important;
 }
 
+/* ── FORM LABELS & WIDGETS (VISIBILIDAD) ── */
+div[data-testid="stWidgetLabel"] p, 
+div[data-testid="stMarkdownContainer"] p,
+label[data-baseweb="checkbox"] div {
+  color: #E8EFF8 !important;
+  font-weight: 500 !important;
+}
+div[data-baseweb="input"] {
+  border: 1px solid #2A4A70 !important;
+  background-color: #162640 !important;
+}
+div[data-baseweb="input"] input {
+  color: #FFF !important;
+}
+
 /* ── MOBILE OPTIMIZATION ── */
 @media(max-width: 768px) {
   .kpi-card { padding: 12px 10px 10px; }
