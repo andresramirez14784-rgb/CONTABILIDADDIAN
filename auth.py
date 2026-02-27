@@ -80,59 +80,192 @@ def require_auth():
 
 
 def _render_login():
-    """Render login page."""
+    """Render full viewport split-screen login page."""
     logo_b64 = _get_logo_b64()
     logo_html = ""
     if logo_b64:
-        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:160px;height:160px;object-fit:contain;border-radius:20px;margin-bottom:24px;box-shadow:0 4px 24px rgba(0,0,0,0.3);" />'
+        # Hacer logo circular estilo CELUMANIA
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:170px;height:170px;object-fit:contain;border-radius:50%;margin-bottom:20px;box-shadow:0 8px 30px rgba(0,0,0,0.15); background:white; padding:15px;" />'
     else:
         logo_html = '<div style="font-size:5rem;margin-bottom:16px;">📊</div>'
 
     st.markdown("""
     <style>
-    /* Remove top padding for a cleaner look */
-    .block-container {
-        padding-top: 3rem !important;
-        padding-bottom: 2rem !important;
+    /* 1. Fondo global pantalla dividida exacta 50/50 */
+    .stApp {
+        background: linear-gradient(90deg, 
+            #58A0D6 0%,  /* Azul claro (izquierdo) simulando la imagen */
+            #2C74B3 50%, /* Gradiente suave en el azul */
+            #E2E8F0 50%, /* Blanco/Gris claro (derecho) */
+            #E2E8F0 100%
+        ) !important;
     }
-    /* Style the form to look modern */
+    
+    /* 2. Ocultar menús y header nav */
+    header[data-testid="stHeader"], [data-testid="collapsedControl"], [data-testid="stSidebar"] {
+        display: none !important;
+    }
+    
+    /* 3. Limpiar paddings nativos y centrar altura completa */
+    .block-container {
+        padding: 0 !important;
+        max-width: 100% !important;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    /* 4. Alinear columnas de streamlit verticalmente al centro */
+    [data-testid="stHorizontalBlock"] {
+        align-items: center;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        max-width: 1200px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* 5. Título y panel izquierdo (Texto) */
+    .login-left-content {
+        color: white;
+        text-align: center;
+        padding: 2rem;
+    }
+    .login-left-content h1 {
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .login-left-content p {
+        font-size: 1rem;
+        font-weight: 500;
+        color: rgba(255,255,255,0.9);
+    }
+    .login-left-content .author {
+        margin-top: 50px;
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.7);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* 6. Tarjeta Formulario Derecha (Blanca flotante estilo CELUMANIA) */
     [data-testid="stForm"] {
-        background: #152238;
-        border: 1px solid #2A3F5F;
-        border-radius: 12px;
-        padding: 30px 20px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        background: #FFFFFF !important;
+        border-radius: 20px !important;
+        padding: 40px 30px 30px !important;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.06) !important;
+        border: none !important;
+        width: 100%;
+        max-width: 380px;
+        margin: 0 auto;
+    }
+    [data-testid="stForm"] p, [data-testid="stForm"] label, [data-testid="stForm"] div {
+        color: #4A5568 !important;
+    }
+    [data-testid="stForm"] input {
+        background: #F7FAFC !important;
+        border: 1px solid #CBD5E0 !important;
+        color: #2D3748 !important;
+        border-radius: 8px !important;
+        padding: 12px 16px !important;
+        font-size: 0.95rem !important;
+    }
+    [data-testid="stFormSubmitButton"] button {
+        background: #3498DB !important; /* Azul botón Celumania */
+        color: white !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        padding: 0.6rem 1rem !important;
+        border: none !important;
+        width: 100% !important;
+        text-transform: uppercase;
+        font-size: 0.9rem !important;
+        letter-spacing: 0.5px;
+        margin-top: 10px;
+    }
+    [data-testid="stFormSubmitButton"] button:hover {
+        background: #2980B9 !important;
+        box-shadow: 0 4px 12px rgba(52,152,219,0.3) !important;
+    }
+    
+    .login-right-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .login-right-header h2 {
+        color: #2D3748;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+    .login-right-header p {
+        color: #718096;
+        font-size: 0.9rem;
+    }
+
+    /* 7. Responsivo para celulares (Apilar) */
+    @media (max-width: 768px) {
+        .stApp {
+            background: #E2E8F0 !important; /* Fondo gris completo */
+        }
+        [data-testid="stHorizontalBlock"] {
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px !important;
+        }
+        .block-container {
+            height: auto;
+            justify-content: flex-start;
+        }
+        .login-left-content {
+            background: linear-gradient(135deg, #58A0D6 0%, #2C74B3 100%);
+            border-radius: 20px;
+            margin-bottom: 10px;
+            padding: 40px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        [data-testid="stForm"] {
+            padding: 30px 20px 20px !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    col1, col2 = st.columns([1.1, 1], gap="large")
+    col1, col2 = st.columns(2, gap="large")
 
     with col1:
         st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #1a8bd1 0%, #0a4f8a 50%, #062d5a 100%);
-                    padding: 40px; border-radius: 16px; text-align: center; height: 100%; min-height: 70vh;
-                    display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div class="login-left-content">
             {logo_html}
-            <h1 style="color:white; font-size: 2.2rem; margin-bottom: 12px; font-weight:800; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">{APP_NAME}</h1>
-            <p style="color:rgba(255,255,255,0.85); font-size:1.05rem; max-width: 360px; margin: 0 auto; line-height:1.5;">{APP_SUBTITLE}</p>
-            <div style="margin-top: 60px; padding-top: 20px; color:rgba(255,255,255,0.6); font-size:0.8rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <h1>{APP_NAME}</h1>
+            <p>{APP_SUBTITLE}</p>
+            <div class="author">
                 <b>DESARROLLADO POR {APP_AUTHOR}</b><br>Software de gestión contable
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown('<div style="display:flex; flex-direction:column; justify-content:center; height:100%; min-height:70vh; padding: 20px 10px;">'
-                    '<h2 style="color:white;text-align:center;margin-bottom:8px;font-size:1.8rem;">Bienvenido</h2>'
-                    '<p style="color:#7A90AB;text-align:center;margin-bottom:32px;font-size:0.95rem;">Inicia sesión en tu cuenta para continuar</p>', 
-                    unsafe_allow_html=True)
-        
+        # El st.form abarca también el encabezado para mantenerlo todo dentro de la tarjeta blanca
         with st.form("login_form", clear_on_submit=False):
-            email    = st.text_input("Correo electrónico", placeholder="usuario@ejemplo.co")
+            st.markdown("""
+            <div class="login-right-header">
+                <h2>Bienvenido</h2>
+                <p>Inicia sesión en tu cuenta para continuar</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            email    = st.text_input("Usuario / Correo", placeholder="usuario@ejemplo.co")
             password = st.text_input("Contraseña", type="password", placeholder="••••••••")
-            st.markdown("<br>", unsafe_allow_html=True)
-            submitted = st.form_submit_button("INICIAR SESIÓN", use_container_width=True, type="primary")
+            st.markdown("<div style='text-align:right; font-size:0.75rem; color:#A0AEC0; margin-bottom:10px;'>¿Olvidaste tu contraseña?</div>", unsafe_allow_html=True)
+            submitted = st.form_submit_button("INICIAR SESIÓN", use_container_width=True)
 
         if submitted:
             if not email or not password:
@@ -144,11 +277,9 @@ def _render_login():
                 st.error("Correo o contraseña incorrectos.")
 
         st.markdown("""
-        <div style="text-align:center;margin-top:24px;font-size:.8rem;color:#4A6080; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
-          <b style="color:#7A90AB;">Accesos de Demo:</b><br>
-          <span style="color:#9DC3E6">admin@contadash.co</span> / Admin2026!<br>
-          <span style="color:#9DC3E6">contador@contadash.co</span> / Contador2026!
-        </div>
+        <div style="text-align:center;margin-top:20px;font-size:0.8rem;color:#718096;">
+          <b style="color:#4A5568;">Accesos de Demo:</b><br>
+          <span style="color:#3498DB">admin@contadash.co</span> / Admin2026!<br>
         </div>
         """, unsafe_allow_html=True)
 
