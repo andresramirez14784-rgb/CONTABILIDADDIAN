@@ -18,6 +18,7 @@ import logging
 from datetime import datetime
 import pandas as pd
 import pdfplumber
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -635,6 +636,7 @@ def _parse_excel_generic(file_path: str, banco: str):
 
 # ── API pública ───────────────────────────────────────────────────────────────
 
+@st.cache_data(show_spinner=False)
 def parse_bank_statement(pdf_path: str) -> dict:
     """
     Extrae movimientos de un extracto bancario PDF colombiano.
@@ -714,6 +716,7 @@ def parse_bank_statement(pdf_path: str) -> dict:
     return result
 
 
+@st.cache_data(show_spinner=False)
 def parse_bank_statement_excel(excel_path: str) -> dict:
     """
     Extrae movimientos de un extracto bancario en Excel (.xlsx / .xls) colombiano.

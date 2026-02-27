@@ -148,6 +148,17 @@ header[data-testid="stHeader"]{background:rgba(15,28,51,0.95)!important;}
   color: white !important;
 }
 
+/* ── MOBILE OPTIMIZATION ── */
+@media(max-width: 768px) {
+  .kpi-card { padding: 12px 10px 10px; }
+  .kpi-icon { font-size: 1.6rem; margin-bottom: 6px; }
+  .kpi-value { font-size: 1.1rem; }
+  .kpi-label { font-size: 0.6rem; letter-spacing: 0.5px; }
+  .section-header { font-size: 0.8rem; padding: 8px 12px; margin: 12px 0 8px 0; }
+  .stTabs [data-baseweb="tab"] { padding: 4px 8px !important; font-size: 0.75rem; }
+  .block-container { padding-left: 1rem !important; padding-right: 1rem !important; }
+}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg-dark); }

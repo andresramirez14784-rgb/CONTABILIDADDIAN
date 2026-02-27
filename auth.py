@@ -80,113 +80,58 @@ def require_auth():
 
 
 def _render_login():
-    """Render split-screen login page with logo panel and form panel."""
+    """Render login page."""
     logo_b64 = _get_logo_b64()
     logo_html = ""
     if logo_b64:
-        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:180px;height:180px;object-fit:contain;border-radius:20px;margin-bottom:24px;box-shadow:0 4px 24px rgba(0,0,0,0.3);" />'
+        logo_html = f'<img src="data:image/png;base64,{logo_b64}" style="width:160px;height:160px;object-fit:contain;border-radius:20px;margin-bottom:24px;box-shadow:0 4px 24px rgba(0,0,0,0.3);" />'
     else:
         logo_html = '<div style="font-size:5rem;margin-bottom:16px;">📊</div>'
 
-    st.markdown(f"""
+    st.markdown("""
     <style>
-    .login-split {{
-        display: flex;
-        min-height: 92vh;
-        margin: -1rem -1rem 0 -1rem;
-        border-radius: 0;
-    }}
-    .login-left {{
-        flex: 1;
-        background: linear-gradient(135deg, #1a8bd1 0%, #0a4f8a 40%, #062d5a 100%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-        position: relative;
-    }}
-    .login-left h1 {{
-        color: white;
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: 1px;
-        margin: 0 0 8px 0;
-        text-align: center;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }}
-    .login-left .subtitle {{
-        color: rgba(255,255,255,0.8);
-        font-size: 0.95rem;
-        text-align: center;
-        max-width: 320px;
-        line-height: 1.5;
-    }}
-    .login-left .author {{
-        position: absolute;
-        bottom: 30px;
-        color: rgba(255,255,255,0.6);
-        font-size: 0.75rem;
-        text-align: center;
-        letter-spacing: 0.5px;
-    }}
-    .login-left .author b {{
-        color: rgba(255,255,255,0.85);
-    }}
-    .login-right {{
-        flex: 1;
-        background: #0F1C33;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-    }}
-    .login-right-inner {{
-        max-width: 400px;
-        width: 100%;
-    }}
-    .login-right-inner h2 {{
-        color: white;
-        font-size: 1.6rem;
-        font-weight: 700;
-        margin: 0 0 6px 0;
-        text-align: center;
-    }}
-    .login-right-inner .hint {{
-        color: #7A90AB;
-        font-size: 0.85rem;
-        text-align: center;
-        margin-bottom: 28px;
-    }}
-    @media(max-width:768px) {{
-        .login-split {{ flex-direction: column; }}
-        .login-left {{ min-height: 30vh; padding: 24px; }}
-        .login-left h1 {{ font-size: 1.4rem; }}
-        .login-right {{ padding: 24px; }}
-    }}
+    /* Remove top padding for a cleaner look */
+    .block-container {
+        padding-top: 3rem !important;
+        padding-bottom: 2rem !important;
+    }
+    /* Style the form to look modern */
+    [data-testid="stForm"] {
+        background: #152238;
+        border: 1px solid #2A3F5F;
+        border-radius: 12px;
+        padding: 30px 20px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
     </style>
-    <div class="login-split">
-      <div class="login-left">
-        {logo_html}
-        <h1>{APP_NAME}</h1>
-        <div class="subtitle">{APP_SUBTITLE}</div>
-        <div class="author"><b>DESARROLLADO POR {APP_AUTHOR}</b><br>Software de gestión contable</div>
-      </div>
-      <div class="login-right">
-        <div class="login-right-inner">
-          <h2>Bienvenido</h2>
-          <div class="hint">Inicia sesión en tu cuenta para continuar</div>
-        </div>
-      </div>
-    </div>
     """, unsafe_allow_html=True)
 
-    col_l, col_c, col_r = st.columns([1.2, 2, 1.2])
-    with col_c:
+    col1, col2 = st.columns([1.1, 1], gap="large")
+
+    with col1:
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #1a8bd1 0%, #0a4f8a 50%, #062d5a 100%);
+                    padding: 40px; border-radius: 16px; text-align: center; height: 100%; min-height: 70vh;
+                    display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+            {logo_html}
+            <h1 style="color:white; font-size: 2.2rem; margin-bottom: 12px; font-weight:800; text-shadow: 0 2px 8px rgba(0,0,0,0.3);">{APP_NAME}</h1>
+            <p style="color:rgba(255,255,255,0.85); font-size:1.05rem; max-width: 360px; margin: 0 auto; line-height:1.5;">{APP_SUBTITLE}</p>
+            <div style="margin-top: 60px; padding-top: 20px; color:rgba(255,255,255,0.6); font-size:0.8rem; border-top: 1px solid rgba(255,255,255,0.1);">
+                <b>DESARROLLADO POR {APP_AUTHOR}</b><br>Software de gestión contable
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown('<div style="display:flex; flex-direction:column; justify-content:center; height:100%; min-height:70vh; padding: 20px 10px;">'
+                    '<h2 style="color:white;text-align:center;margin-bottom:8px;font-size:1.8rem;">Bienvenido</h2>'
+                    '<p style="color:#7A90AB;text-align:center;margin-bottom:32px;font-size:0.95rem;">Inicia sesión en tu cuenta para continuar</p>', 
+                    unsafe_allow_html=True)
+        
         with st.form("login_form", clear_on_submit=False):
             email    = st.text_input("Correo electrónico", placeholder="usuario@ejemplo.co")
             password = st.text_input("Contraseña", type="password", placeholder="••••••••")
+            st.markdown("<br>", unsafe_allow_html=True)
             submitted = st.form_submit_button("INICIAR SESIÓN", use_container_width=True, type="primary")
 
         if submitted:
@@ -199,9 +144,11 @@ def _render_login():
                 st.error("Correo o contraseña incorrectos.")
 
         st.markdown("""
-        <div style="text-align:center;margin-top:20px;font-size:.78rem;color:#4A6080">
-          <b>Demo:</b> admin@contadash.co / Admin2026!<br>
-          Contador: contador@contadash.co / Contador2026!
+        <div style="text-align:center;margin-top:24px;font-size:.8rem;color:#4A6080; background:rgba(255,255,255,0.03); padding:12px; border-radius:8px;">
+          <b style="color:#7A90AB;">Accesos de Demo:</b><br>
+          <span style="color:#9DC3E6">admin@contadash.co</span> / Admin2026!<br>
+          <span style="color:#9DC3E6">contador@contadash.co</span> / Contador2026!
+        </div>
         </div>
         """, unsafe_allow_html=True)
 
