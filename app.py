@@ -159,25 +159,30 @@ label[data-baseweb="checkbox"] div {
 }
 
 /* Fix Inputs & Selectboxes backgrounds and colors */
-.stTextInput input, .stPasswordInput input, .stDateInput input {
+[data-testid="stTextInput"] div[data-baseweb="input"],
+[data-testid="stTextInput"] div[data-baseweb="base-input"],
+[data-testid="stSelectbox"] div[data-baseweb="select"] > div,
+[data-testid="stDateInput"] div[data-baseweb="input"],
+[data-testid="stDateInput"] div[data-baseweb="base-input"] {
+  background-color: #152238 !important;
+  border: 1px solid #2A4A70 !important;
+}
+
+[data-testid="stTextInput"] input,
+[data-testid="stDateInput"] input {
   color: #FFF !important;
-  background-color: #152238 !important;
+  -webkit-text-fill-color: #FFF !important;
+  background-color: transparent !important;
 }
-div[data-baseweb="input"], div[data-baseweb="base-input"] {
-  background-color: #152238 !important;
-  border-color: #2A4A70 !important;
-}
-div[data-baseweb="select"] > div {
-  background-color: #152238 !important;
-  border-color: #2A4A70 !important;
-}
-div[data-baseweb="select"] span {
+
+[data-testid="stSelectbox"] span {
   color: #FFF !important;
 }
-ul[data-baseweb="menu"] {
+
+ul[data-baseweb="menu"], ul[data-testid="stSelectboxVirtualDropdown"] {
   background-color: #1E3550 !important;
 }
-ul[data-baseweb="menu"] li {
+ul[data-baseweb="menu"] li, ul[data-testid="stSelectboxVirtualDropdown"] li {
   color: #FFF !important;
 }
 
