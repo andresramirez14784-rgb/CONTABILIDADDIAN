@@ -157,11 +157,27 @@ label[data-baseweb="checkbox"] div {
   color: #E8EFF8 !important;
   font-weight: 500 !important;
 }
-div[data-baseweb="input"] {
-  border: 1px solid #2A4A70 !important;
-  background-color: #162640 !important;
+
+/* Fix Inputs & Selectboxes backgrounds and colors */
+.stTextInput input, .stPasswordInput input, .stDateInput input {
+  color: #FFF !important;
+  background-color: #152238 !important;
 }
-div[data-baseweb="input"] input {
+div[data-baseweb="input"], div[data-baseweb="base-input"] {
+  background-color: #152238 !important;
+  border-color: #2A4A70 !important;
+}
+div[data-baseweb="select"] > div {
+  background-color: #152238 !important;
+  border-color: #2A4A70 !important;
+}
+div[data-baseweb="select"] span {
+  color: #FFF !important;
+}
+ul[data-baseweb="menu"] {
+  background-color: #1E3550 !important;
+}
+ul[data-baseweb="menu"] li {
   color: #FFF !important;
 }
 
