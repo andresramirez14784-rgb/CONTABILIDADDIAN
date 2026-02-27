@@ -131,9 +131,9 @@ header[data-testid="stHeader"]{background:rgba(15,28,51,0.95)!important;}
   background: var(--bg-card2);
   border-radius: 10px;
   padding: 4px;
-  overflow-x: auto;
-  flex-wrap: nowrap !important;
-  scrollbar-width: thin;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 2px;
 }
 .stTabs [data-baseweb="tab"] {
   color: var(--text-muted);
@@ -142,6 +142,8 @@ header[data-testid="stHeader"]{background:rgba(15,28,51,0.95)!important;}
   font-size: .82rem;
   white-space: nowrap;
   padding: 6px 12px !important;
+  flex-grow: 1;
+  text-align: center;
 }
 .stTabs [aria-selected="true"] {
   background: var(--secondary) !important;
