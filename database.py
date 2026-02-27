@@ -490,3 +490,36 @@ def save_uploaded_file(nit: str, report_type: str, filename: str, data: bytes) -
     path = d / safe_name
     path.write_bytes(data)
     return str(path)
+
+# ─── Bank Reports Persistence ─────────────────────────────────────────────────
+def save_bank_report(company_id: int, filename: str, data: dict):
+    conn = get_connection()
+    c = conn.cursor()
+    data_blob = pickle.dumps(data)
+    c.execute("""
+        INSERT OR REPLACE INTO bank_reports (company_id, filename, data_blob)
+        VALUES (?, ?, ?)
+    """, (company_id, filename, data_blob))
+    conn.commit()
+    conn.close()
+
+def get_bank_reports(company_id: int) -> dict:
+    conn = get_connection()
+    c = conn.cursor()
+    rows = c.execute("SELECT filename, data_blob FROM bank_reports WHERE company_id = ?", (company_id,)).fetchall()
+    conn.close()
+    
+    reports = {}
+    for row in rows:
+        try:
+            reports[row["filename"]] = pickle.loads(row["data_blob"])
+        except Exception:
+            pass
+    return reports
+
+def delete_bank_report(company_id: int, filename: str):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("DELETE FROM bank_reports WHERE company_id = ? AND filename = ?", (company_id, filename))
+    conn.commit()
+    conn.close()
